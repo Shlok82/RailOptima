@@ -23,14 +23,15 @@
   "author": "RailOptima Team",
   "license": "MIT",
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.13",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^4.21.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
   },
   "engines": {
     "node": ">=16.0.0",
