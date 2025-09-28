@@ -18,7 +18,7 @@ const corsOptions = {
 };
 
 // Serve static assets from public/
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public','index.html')));
 
 // Parse JSON bodies
 app.use(express.json());
