@@ -4,6 +4,7 @@
   "description": "RailOptima – AI-Driven Fleet Optimization Web & Dashboard for Kochi Metro",
   "main": "server.js",
   "scripts": {
+    "postinstall": "chmod +x ./node_modules/.bin/tailwindcss",
     "build:css": "npx tailwindcss -i ./css/input.css -o ./css/output.css --minify",
     "build": "npm run build:css",
     "start": "node server.js",
