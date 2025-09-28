@@ -1,0 +1,46 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .hero-gradient {
+    @apply bg-gradient-to-br from-metro-green via-metro-blue to-metro-orange;
+  }
+  
+  .feature-card {
+    @apply bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-metro-blue/30 
+           transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1;
+  }
+  
+  .impact-card {
+    @apply bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl 
+           hover:shadow-lg transition-all duration-300;
+  }
+  
+  .data-stream-card {
+    @apply bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md border-2 border-transparent
+           hover:border-metro-blue/20 transition-all duration-500;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-metro-green to-metro-blue bg-clip-text text-transparent;
+  }
+  
+  .btn-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95;
+  }
+  
+  .dark .feature-card {
+    @apply bg-gray-800/90 border-gray-700 hover:border-metro-blue/50;
+  }
+  
+  .dark .impact-card {
+    @apply bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700;
+  }
+  
+  .dark .data-stream-card {
+    @apply bg-gray-800/95 border-gray-700 hover:border-metro-blue/30;
+  }
+}
+

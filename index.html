@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RailOptima – AI-Driven Fleet Optimization for Kochi Metro</title>
+<link href="/css/input.css" rel="stylesheet" />
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Add Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'metro-green': '#00a300',
+            'metro-green-dark': '#1e7145',
+            'metro-blue': '#2d89ef',
+            'metro-blue-dark': '#2b5797',
+            'metro-orange': '#e3a21a',
+            'metro-red': '#da532c',
+          }
+        }
+      }
+    }
+  </script>
+
+
+
+
+</head>
+
+
+<body class="font-sans antialiased">
+  <body class="font-sans antialiased">
+  
+  <!-- NEW: Navigation Bar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-md border-b border-white/20">
+    <div class="container mx-auto px-6">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <img src="railoptima_logo2.png" alt="RailOptima" class="w-8 h-8">
+          <span class="text-white font-bold text-xl">RailOptima</span>
+        </div>
+        
+        <!-- Navigation Links -->
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="#features" class="text-white/90 hover:text-white transition-colors">Features</a>
+          <a href="#data-streams" class="text-white/90 hover:text-white transition-colors">Data Streams</a>
+          <a href="#impact" class="text-white/90 hover:text-white transition-colors">Impact</a>
+          <a href="simulation.html" class="text-white/90 hover:text-white transition-colors">Simulation</a>
+          <a href="mileage-dashboard.html" target="_blank" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-all">
+            <i class="fas fa-chart-line mr-2"></i>Dashboard
+          </a>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="md:hidden text-white">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
+      
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="md:hidden hidden bg-white/10 backdrop-blur-md rounded-lg mt-2 p-4">
+        <div class="flex flex-col space-y-3">
+          <a href="#features" class="text-white/90 hover:text-white py-2">Features</a>
+          <a href="#data-streams" class="text-white/90 hover:text-white py-2">Data Streams</a>
+          <a href="#impact" class="text-white/90 hover:text-white py-2">Impact</a>
+          <a href="simulation.html" class="text-white/90 hover:text-white py-2">Simulation</a>
+          <a href="mileage-dashboard.html" target="_blank" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 text-center">
+            <i class="fas fa-chart-line mr-2"></i>Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Update hero section padding to account for fixed nav -->
+  <section id="hero" class="min-h-screen pt-16 bg-gradient-to-br from-metro-green via-metro-blue to-metro-orange relative overflow-hidden">
+    <!-- rest of your hero section content stays the same -->
+
+  <!-- Hero Section -->
+  <section id="hero" class="min-h-screen bg-gradient-to-br from-metro-green via-metro-blue to-metro-orange relative overflow-hidden">
+    <!-- Background Animation Elements -->
+    <div class="absolute top-20 left-10 text-white/30 animate-bounce">
+      <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A0.5,0.5 0 0,0 7,13.5A0.5,0.5 0 0,0 7.5,14A0.5,0.5 0 0,0 8,13.5A0.5,0.5 0 0,0 7.5,13M16.5,13A0.5,0.5 0 0,0 16,13.5A0.5,0.5 0 0,0 16.5,14A0.5,0.5 0 0,0 17,13.5A0.5,0.5 0 0,0 16.5,13Z"/>
+      </svg>
+    </div>
+    
+    <div class="absolute bottom-20 right-10 text-white/30 animate-pulse">
+      <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+      </svg>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button id="darkToggle" class="absolute top-6 right-6 p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all duration-300">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+    </button>
+
+    <div class="container mx-auto px-6 h-screen flex items-center justify-center text-center relative z-10">
+      <!-- Animated Train Icon -->
+     <!-- Animated Train Icon -->
+<div class="mb-8 animate-bounce">
+  <img src="railoptima_logo2.png" alt="RailOptima Logo" class="w-24 h-24 mx-auto">
+</div>
+
+
+      <div>
+        <!-- Main Heading -->
+        <h1 class="text-6xl md:text-8xl font-black text-white mb-6 animate-pulse">
+          RailOptima
+        </h1>
+        
+        <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">
+          AI-Driven Fleet Optimization for Kochi Metro
+        </h2>
+        
+        <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-4xl mx-auto leading-relaxed">
+          Automate, analyze, and optimize train scheduling with explainable AI.<br>
+          Reduce errors, maximize asset life, and ensure 99.5% punctuality.
+        </p>
+        
+       <a href="simulation.html" class="bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-2xl text-xl font-bold hover:scale-105 transition-transform duration-300 inline-block text-center">
+  Try the Simulation
+</a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Section -->
+  <section id="features" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          Core Features Overview
+        </h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature Card 1 -->
+        <div class="bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-metro-blue/30 rounded-3xl p-8 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300" data-feature="fitness-certificates">
+  <!-- Rest of your card content -->
+
+
+          <div class="text-metro-green mb-6">
+            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,12.1 16,12.8 16,14V18C16,19.1 15.1,20 14,20H10C8.9,20 8,19.1 8,18V14C8,12.8 8.6,12.1 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
+            </svg>
+          </div>
+          <span class="inline-block bg-metro-green text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">Live</span>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Fitness Certificates Tracking</h3>
+          <p class="text-gray-600">Live dashboard of certifications per trainset, highlighting expiring certificates.</p>
+        <!-- Inside the Fitness Certificates Tracking feature card -->
+<div id="certificates-list" class="mt-4">
+  <!-- Certificates will be injected here by custom.js -->
+  <p class="text-gray-500">Loading certificates...</p>
+</div>
+</div>
+        
+        <!-- Feature Card 2 -->
+        <!-- Feature Card 2 -->
+<div class="bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-metro-blue/30 rounded-3xl p-8 …"
+     data-feature="job-card-status">
+  <div class="text-metro-blue mb-6">
+    <!-- SVG icon -->
+  </div>
+  <span class="inline-block bg-metro-blue text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+    Active
+  </span>
+  <h3 class="text-2xl font-bold text-gray-900 mb-4">
+    Job-Card Status Integration
+  </h3>
+  <p class="text-gray-600">
+    Visual checklist from IBM Maximo showing open/closed tickets by department.
+  </p>
+</div>
+
+       <!-- Feature Card 3: Branding Exposure Dashboard -->
+<div
+  id="brandingFeatureCard"
+  class="feature-card bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-orange-500 rounded-3xl p-6 cursor-pointer transition duration-300 hover:shadow-lg"
+  data-feature="branding-exposure"
+>
+  <div class="flex items-center space-x-4 mb-4 text-orange-600">
+    <!-- Icon -->
+    <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" viewBox="0 0 24 24">
+      <path d="M13 2h6v6M8 22H2v-6M17.5 17.5L7 7" />
+    </svg>
+    <div>
+      <span class="inline-block bg-orange-500 text-white text-xs uppercase px-2 py-1 rounded mb-1 font-semibold">Active</span>
+      <h3 class="text-xl font-semibold text-gray-900">Branding Exposure Dashboard</h3>
+      <p class="text-gray-600 max-w-xs mt-1">
+        Real-time wrap exposure stats vs contractual targets with alert badges.
+      </p>
+    </div>
+  </div>
+</div>
+
+
+
+
+        <!-- Feature Card 4 -->
+       <!-- Enhanced Mileage Balancing Feature Card with Dashboard Link -->
+<div class="bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-metro-red/50 rounded-3xl p-8 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+     onclick="window.open('mileage-dashboard.html', '_blank')">
+  
+  <!-- Icon -->
+  <div class="text-metro-red mb-6 group-hover:scale-110 transition-transform duration-300">
+    <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12,16A3,3 0 0,1 9,13C9,11.88 9.61,10.9 10.5,10.39L20.21,4.77L14.68,14.35C14.18,15.33 13.17,16 12,16M12,3C13,3 14,3.25 14.86,3.69L12,5.54L9.14,3.69C10,3.25 11,3 12,3M12,21C11,21 10,20.75 9.14,20.31L12,18.46L14.86,20.31C14,20.75 13,21 12,21Z"/>
+    </svg>
+  </div>
+  
+  <!-- Status Badge -->
+  <span class="inline-block bg-metro-red text-white px-3 py-1 rounded-full text-sm font-semibold mb-4 group-hover:bg-metro-red/90 transition-colors">
+    Optimized
+  </span>
+  
+  <!-- Title -->
+  <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-metro-red transition-colors">
+    Mileage Balancing
+  </h3>
+  
+  <!-- Description -->
+  <p class="text-gray-600 mb-4">
+    Interactive dashboard displaying kilometre allocation and wear tracking for Bogie, HVAC, and Brakes components.
+  </p>
+  
+  <!-- Dashboard Preview Features -->
+  <div class="space-y-2 mb-4">
+    <div class="flex items-center text-sm text-gray-500">
+      <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+      <span>Real-time component health monitoring</span>
+    </div>
+    <div class="flex items-center text-sm text-gray-500">
+      <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+      <span>Interactive charts & analytics</span>
+    </div>
+    <div class="flex items-center text-sm text-gray-500">
+      <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+      <span>Maintenance scheduling & alerts</span>
+    </div>
+  </div>
+  
+  <!-- Call to Action Button -->
+  <div class="mt-6 pt-4 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-gray-700 group-hover:text-metro-red transition-colors">
+        Click to open dashboard
+      </span>
+      <div class="bg-metro-red/10 text-metro-red px-3 py-2 rounded-lg group-hover:bg-metro-red group-hover:text-white transition-all duration-300">
+        <i class="fas fa-external-link-alt"></i>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Hover Effect Indicator -->
+  <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    <div class="w-3 h-3 bg-metro-red rounded-full animate-pulse"></div>
+  </div>
+</div>
+<!-- Cleaning & Detailing Slots Animated Card FEature card 5 -->
+<div id="cleaningCard"
+     class="relative bg-gradient-to-br from-blue-500 to-green-400 dark:from-blue-800 dark:to-green-600 rounded-3xl p-6 overflow-hidden shadow-2xl cursor-pointer"
+     onclick="openCleaningModal()">
+  <!-- Animated Gradient Background -->
+  <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-green-400 opacity-20 animate-gradient"></div>
+
+  <!-- Header -->
+  <div class="relative z-10 flex items-center space-x-3 mb-6">
+    <div id="brushIcon" class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+      <i class="fas fa-broom text-blue-500 text-2xl"></i>
+    </div>
+    <div>
+      <h3 class="text-2xl font-bold text-white">Cleaning & Detailing Slots</h3>
+      <p class="text-sm text-white/80">Animated cleaning schedule, staff assignment, and bay occupancy grid</p>
+    </div>
+  </div>
+
+  <!-- KPI Counters -->
+  <div class="grid grid-cols-3 gap-4 mb-6 relative z-10">
+    <div id="kpiBays" class="kpi-card bg-white/30 backdrop-blur-sm p-4 rounded-xl text-center">
+      <p class="text-sm text-white">Bays Occupied</p>
+      <p class="text-3xl font-bold text-white">0</p>
+    </div>
+    <div id="kpiStaff" class="kpi-card bg-white/30 backdrop-blur-sm p-4 rounded-xl text-center">
+      <p class="text-sm text-white">Staff on Duty</p>
+      <p class="text-3xl font-bold text-white">0</p>
+    </div>
+    <div id="kpiScheduled" class="kpi-card bg-white/30 backdrop-blur-sm p-4 rounded-xl text-center">
+      <p class="text-sm text-white">Scheduled Today</p>
+      <p class="text-3xl font-bold text-white">0</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-2 mb-4 relative z-10">
+    <button class="filter-btn px-3 py-1 bg-white/20 text-white rounded-full">All Bays</button>
+    <button class="filter-btn px-3 py-1 bg-white/20 text-white rounded-full">Deep Clean</button>
+    <button class="filter-btn px-3 py-1 bg-white/20 text-white rounded-full">Basic Clean</button>
+    <button class="filter-btn px-3 py-1 bg-white/20 text-white rounded-full">By Staff</button>
+  </div>
+
+  <!-- Timeline & Bay Grid Containers -->
+  <div id="cleaningLoading" class="relative z-10">
+    <!-- shimmer skeletons here if needed -->
+  </div>
+  <div id="timelineContainer" class="timeline relative z-10 space-y-2"></div>
+  <div id="bayGrid" class="grid grid-cols-4 gap-2 mt-4 relative z-10"></div>
+
+  <!-- Export Button -->
+  <button onclick="exportCleaningPDF()"
+          class="relative z-10 mt-6 ml-auto block bg-white text-blue-500 px-4 py-2 rounded-full hover:bg-white/90 transition">
+    <i class="fas fa-download mr-2"></i>Export Report
+  </button>
+</div>
+
+<!-- Modal for full dashboard -->
+<div id="cleaningModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl max-w-3xl w-full overflow-y-auto relative">
+    <button onclick="closeCleaningModal()"
+            class="absolute top-4 right-4 text-gray-600 hover:text-red-600 text-2xl">×</button>
+    <h2 class="text-2xl font-bold mb-4">Cleaning & Detailing Slots Dashboard</h2>
+    <div id="fullCleaningView"></div>
+  </div>
+</div>
+
+
+        
+        <!-- Feature Card 6 -->
+        <div class="bg-white/90 backdrop-blur-sm border-2 border-gray-100 hover:border-metro-blue/30 rounded-3xl p-8 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300">
+          <div class="text-metro-blue-dark mb-6">
+            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M15,19L9,16.89V5L15,7.11M20.5,3C20.44,3 20.39,3 20.34,3L15,5.1L9,3L3.36,4.9C3.15,4.97 3,5.15 3,5.38V20.5A0.5,0.5 0 0,0 3.5,21C3.55,21 3.61,21 3.66,21L9,18.9L15,21L20.64,19.1C20.85,19.03 21,18.85 21,18.62V3.5A0.5,0.5 0 0,0 20.5,3Z"/>
+            </svg>
+          </div>
+          <span class="inline-block bg-metro-blue-dark text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">3D View</span>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">Stabling Geometry Visualization</h3>
+          <p class="text-gray-600">Interactive 3D yard map for optimal train positioning to minimize shunting.</p>
+        </div>
+      </div>
+      
+      <div class="text-center mt-16">
+        <h3 class="text-3xl font-bold bg-gradient-to-r from-metro-green to-metro-blue bg-clip-text text-transparent">
+          All in one place—no more spreadsheets, logbooks, or WhatsApp confusion!
+        </h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Streams Section -->
+  <section id="data-streams" class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          Integrated Data Streams
+        </h2>
+      </div>
+      
+      <div class="max-w-2xl mx-auto">
+        <div id="carousel-container" class="overflow-hidden">
+          <div id="carousel-track" class="flex transition-transform duration-500 ease-in-out">
+            <!-- Slide 1 -->
+            <div class="w-full flex-shrink-0">
+              <div class="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md mx-auto border-2 border-transparent hover:border-metro-blue/20 transition-all duration-500 text-center">
+                <div class="text-metro-green mb-6">
+                  <svg class="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Maximo Exports</h3>
+                <p class="text-xl text-gray-600">IBM Maximo work orders & maintenance data</p>
+              </div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="w-full flex-shrink-0">
+              <div class="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md mx-auto border-2 border-transparent hover:border-metro-blue/20 transition-all duration-500 text-center">
+                <div class="text-metro-blue mb-6">
+                  <svg class="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">IoT Sensor Inputs</h3>
+                <p class="text-xl text-gray-600">Real-time fitness & mileage sensors</p>
+              </div>
+            </div>
+            
+            <!-- Slide 3 -->
+            <div class="w-full flex-shrink-0">
+              <div class="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md mx-auto border-2 border-transparent hover:border-metro-blue/20 transition-all duration-500 text-center">
+                <div class="text-metro-orange mb-6">
+                  <svg class="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17,4H20A2,2 0 0,1 22,6V10A2,2 0 0,1 20,12H17V4M10,4H13A2,2 0 0,1 15,6V10A2,2 0 0,1 13,12H10V4M4,4H7A2,2 0 0,1 9,6V10A2,2 0 0,1 7,12H4A2,2 0 0,1 2,10V6A2,2 0 0,1 4,4M4,14H7A2,2 0 0,1 9,16V20A2,2 0 0,1 7,22H4A2,2 0 0,1 2,20V16A2,2 0 0,1 4,14M10,14H13A2,2 0 0,1 15,16V20A2,2 0 0,1 13,22H10V14M17,14H20A2,2 0 0,1 22,16V20A2,2 0 0,1 20,22H17V14Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Telecom & Signaling Feeds</h3>
+                <p class="text-xl text-gray-600">Department clearance systems</p>
+              </div>
+            </div>
+            
+            <!-- Slide 4 -->
+            <div class="w-full flex-shrink-0">
+              <div class="bg-white/95 backdrop-blur-md rounded-3xl p-8 max-w-md mx-auto border-2 border-transparent hover:border-metro-blue/20 transition-all duration-500 text-center">
+                <div class="text-metro-red mb-6">
+                  <svg class="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Manual Overrides</h3>
+                <p class="text-xl text-gray-600">Supervisor adjustments & exceptions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Carousel Controls -->
+        <div class="flex justify-center mt-8 space-x-2">
+          <button class="carousel-dot w-3 h-3 rounded-full bg-metro-blue transition-all duration-300" data-slide="0"></button>
+          <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 transition-all duration-300" data-slide="1"></button>
+          <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 transition-all duration-300" data-slide="2"></button>
+          <button class="carousel-dot w-3 h-3 rounded-full bg-gray-300 transition-all duration-300" data-slide="3"></button>
+        </div>
+      </div>
+      
+      <div class="text-center mt-16">
+        <h3 class="text-2xl md:text-3xl font-semibold text-metro-blue">
+          Real-time, interoperable. Built for scalability to 40 trains and 2 depots by 2027.
+        </h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Impact Section -->
+  <section id="impact" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          Impact Section
+        </h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+          <div class="text-6xl font-black text-metro-green mb-4">87%</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Downtime Reduction</h3>
+          <p class="text-gray-600">2 hours → 15 minutes/night</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+          <div class="text-6xl font-black text-metro-blue mb-4">25%</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Maintenance Cost</h3>
+          <p class="text-gray-600">Cost reduction</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+          <div class="text-6xl font-black text-metro-orange mb-4">99.5%</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">SLA Compliance</h3>
+          <p class="text-gray-600">Revenue protection</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300">
+          <div class="text-6xl font-black text-metro-red mb-4">90%</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Error Reduction</h3>
+          <p class="text-gray-600">Manual errors & safety risks</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About & Demo Section -->
+  <section id="demo" class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-4xl md:text-6xl font-bold text-gray-900 mb-8">
+          About & Demo
+        </h2>
+        <p class="text-xl md:text-2xl text-gray-600 mb-8">
+          Experience Kochi Metro's shift to AI-driven optimization
+        </p>
+        <button class="bg-gradient-to-r from-metro-blue to-metro-green text-white px-8 py-4 rounded-2xl text-xl font-bold hover:scale-105 transition-transform duration-300 shadow-lg">
+          Try the Simulation—Experience Kochi Metro's shift to AI!
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-16">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">Contact</h3>
+          <p class="text-gray-300">RailOptima Team<br>SIH 2025</p>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold mb-4">Partners</h3>
+          <p class="text-gray-300">Kochi Metro Rail Limited<br>Smart India Hackathon</p>
+        </div>
+        <div>
+          <h3 class="text-2xl font-bold mb-4">Compliance</h3>
+          <p class="text-gray-300">Security & Scalability<br>Guaranteed</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript for Carousel -->
+  <!-- JavaScript for Carousel -->
+<script>
+// Carousel functionality ONLY
+let currentSlide = 0;
+const slides = 4;
+
+function goToSlide(slide) {
+  currentSlide = slide;
+  const track = document.getElementById('carousel-track');
+  const dots = document.querySelectorAll('.carousel-dot');
+  
+  if (track) {
+    track.style.transform = `translateX(-${slide * 100}%)`;
+  }
+  
+  dots.forEach((dot, index) => {
+    if (index === slide) {
+      dot.classList.remove('bg-gray-300');
+      dot.classList.add('bg-metro-blue');
+    } else {
+      dot.classList.remove('bg-metro-blue');
+      dot.classList.add('bg-gray-300');
+    }
+  });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Auto-advance carousel
+  setInterval(() => {
+    currentSlide = (currentSlide + 1) % slides;
+    goToSlide(currentSlide);
+  }, 3000);
+
+  // Dot click handlers
+  const dots = document.querySelectorAll('.carousel-dot');
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => goToSlide(index));
+  });
+});
+</script>
+<script src="js/custom.js"></script>
+<div id="brandingModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full p-6 overflow-y-auto max-h-[90vh] shadow-lg relative">
+    <button id="brandingCloseBtn" class="absolute top-4 right-4 text-gray-700 dark:text-gray-300 hover:text-red-600 text-3xl font-bold leading-none">×</button>
+    <h2 class="text-3xl font-bold mb-4 dark:text-white">Branding Exposure: Wrap Stats vs Targets</h2>
+    <canvas id="brandingExposureChart" class="rounded-lg mb-4" style="max-height: 250px;"></canvas>
+    <div id="brandingAlert" class="p-4 rounded text-white font-semibold text-center"></div>
+    <p class="mt-4 text-gray-700 dark:text-gray-300">
+      Detailed real-time analysis of wrap advertising exposure compared to contractual targets.
+    </p>
+  </div>
+</div>
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', function() {
+      mobileMenu.classList.toggle('hidden');
+    });
+  }
+  
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+});
+</script>
+<style>
+/* Enhanced hover effects for mileage card */
+.mileage-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.mileage-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(220, 38, 127, 0.1), transparent);
+  transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  transition: transform 0.6s;
+}
+
+.mileage-card:hover::before {
+  transform: translateX(0) translateY(0) rotate(45deg);
+}
+
+.dashboard-pulse {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(220, 38, 127, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(220, 38, 127, 0);
+  }
+}
+</style>
+<style>
+/* Loading shimmer */
+.loading-shimmer {
+  @apply bg-gray-200 dark:bg-gray-700 relative overflow-hidden;
+}
+.loading-shimmer::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent;
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Bay occupancy pulse */
+.bay {
+  @apply relative rounded-lg h-12 flex items-center justify-center text-sm font-medium text-white transition-all;
+}
+.bay.available { @apply bg-green-500; }
+.bay.occupied { @apply bg-yellow-500 animate-pulse; }
+.bay.overdue   { @apply bg-red-600 animate-ping; }
+
+/* Filter button active state */
+.filter-btn.active {
+  @apply bg-metro-blue text-white;
+}
+</style>
+<style>/* Gradient animation */
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 5s ease infinite;
+}
+
+/* KPI hover & pulse */
+.kpi-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255,255,255,0.7);
+}
+.filter-btn {
+  transition: background 0.3s, transform 0.3s;
+}
+.filter-btn.active {
+  background: white;
+  color: #1e3a8a;
+  transform: scale(1.1);
+}
+
+/* Timeline and bay grid styling */
+.timeline > div {
+  background: rgba(255,255,255,0.2);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  opacity: 0;
+}
+.bay {
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.bay.available { background: #10b981; }
+.bay.occupied  { background: #f59e0b; }
+.bay.overdue   { background: #ef4444; }
+</style>
+<script src="js/custom.js"></script>
+
+</body>
+
+
+</html>

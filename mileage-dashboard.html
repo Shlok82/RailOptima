@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RailOptima - Mileage Balancing Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .health-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .health-good { background-color: #10b981; }
+        .health-warning { background-color: #f59e0b; }
+        .health-critical { background-color: #ef4444; }
+        
+        .dark .bg-white { background-color: #1f2937; }
+        .dark .text-gray-900 { color: #f9fafb; }
+        .dark .text-gray-700 { color: #d1d5db; }
+        .dark .text-gray-600 { color: #9ca3af; }
+        .dark .border-gray-200 { border-color: #374151; }
+        .dark .bg-gray-50 { background-color: #111827; }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .tooltip.show { opacity: 1; }
+        
+        .filter-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-container { height: 300px !important; }
+            .mobile-stack { flex-direction: column; }
+            .mobile-stack > div { margin-bottom: 1rem; }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'rail-blue': '#1e40af',
+                        'rail-orange': '#ea580c'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-rail-blue mb-4"></div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Loading RailOptima Dashboard</h3>
+            <p class="text-gray-600 dark:text-gray-400">Fetching mileage data...</p>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-rail-blue dark:text-blue-400">
+                            <i class="fas fa-train mr-2"></i>RailOptima
+                        </h1>
+                    </div>
+                    <div class="ml-10">
+                        <span class="text-gray-600 dark:text-gray-300">Mileage Balancing Dashboard</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="darkModeToggle" class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                    <button id="exportBtn" class="bg-rail-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filters Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-filter mr-2"></i>Filters
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Trainset Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trainset</label>
+                    <select id="trainsetFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="all">All Trainsets</option>
+                    </select>
+                </div>
+                
+                <!-- Component Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Component</label>
+                    <select id="componentFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="all">All Components</option>
+                        <option value="Bogie">Bogie</option>
+                        <option value="HVAC">HVAC</option>
+                        <option value="Brakes">Brakes</option>
+                    </select>
+                </div>
+                
+                <!-- Time Period Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Period</label>
+                    <div class="flex space-x-2">
+                        <button class="filter-button px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" data-period="weekly">Weekly</button>
+                        <button class="filter-button px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 active" data-period="monthly">Monthly</button>
+                        <button class="filter-button px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" data-period="yearly">Yearly</button>
+                    </div>
+                </div>
+                
+                <!-- Chart Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chart Type</label>
+                    <div class="flex space-x-2">
+                        <button class="filter-button px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 active" data-chart="line">Line</button>
+                        <button class="filter-button px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700" data-chart="bar">Bar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Average Mileage Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Average Mileage</p>
+                        <p id="avgMileage" class="text-2xl font-bold text-gray-900 dark:text-white">--</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Per component</p>
+                    </div>
+                    <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-road text-blue-600 dark:text-blue-400 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Most Worn Component -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Most Worn Component</p>
+                        <p id="mostWornComponent" class="text-lg font-bold text-gray-900 dark:text-white">--</p>
+                        <p id="mostWornPercentage" class="text-xs text-gray-500 dark:text-gray-500 mt-1">--</p>
+                    </div>
+                    <div class="h-12 w-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Maintenance -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Next Maintenance</p>
+                        <p id="nextMaintenance" class="text-lg font-bold text-gray-900 dark:text-white">--</p>
+                        <p id="nextMaintenanceDate" class="text-xs text-gray-500 dark:text-gray-500 mt-1">--</p>
+                    </div>
+                    <div class="h-12 w-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-calendar-alt text-yellow-600 dark:text-yellow-400 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Overview -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Fleet Health</p>
+                        <div id="healthOverview" class="mt-2">
+                            <div class="flex items-center mb-1">
+                                <div class="health-indicator health-good"></div>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Good: <span id="goodCount">--</span></span>
+                            </div>
+                            <div class="flex items-center mb-1">
+                                <div class="health-indicator health-warning"></div>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Warning: <span id="warningCount">--</span></span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="health-indicator health-critical"></div>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Critical: <span id="criticalCount">--</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-heart text-green-600 dark:text-green-400 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chart Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-0">
+                    <i class="fas fa-chart-line mr-2"></i>Kilometre Usage & Wear Trends
+                </h2>
+                <div class="flex space-x-2">
+                    <button id="refreshChart" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 400px;">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Component Details Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-table mr-2"></i>Component Details
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="componentTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Trainset</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Component</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total KM</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Wear %</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Health Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Next Maintenance</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-mx-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export Report</h3>
+            <div class="space-y-3">
+                <button id="exportPDF" class="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <i class="fas fa-file-pdf mr-2"></i>Export as PDF
+                </button>
+                <button id="exportCSV" class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fas fa-file-csv mr-2"></i>Export as CSV
+                </button>
+                <button id="closeModal" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let dashboardData = null;
+        let currentChart = null;
+        let currentFilters = {
+            trainset: 'all',
+            component: 'all',
+            period: 'monthly',
+            chartType: 'line'
+        };
+
+        // Sample data (in real app, this would come from your Node.js backend)
+        const sampleData = {
+            "trainsets": [
+                {
+                    "id": "T001",
+                    "name": "Trainset T001",
+                    "components": [
+                        {
+                            "name": "Bogie",
+                            "total_km": 156789,
+                            "wear_percentage": 67.2,
+                            "health_status": "Warning",
+                            "health_color": "yellow",
+                            "maintenance_due": "2025-12-15",
+                            "last_maintenance": "2025-07-20"
+                        },
+                        {
+                            "name": "HVAC",
+                            "total_km": 142356,
+                            "wear_percentage": 45.8,
+                            "health_status": "Good",
+                            "health_color": "green",
+                            "maintenance_due": "2026-02-28",
+                            "last_maintenance": "2025-08-10"
+                        },
+                        {
+                            "name": "Brakes",
+                            "total_km": 198765,
+                            "wear_percentage": 82.4,
+                            "health_status": "Critical",
+                            "health_color": "red",
+                            "maintenance_due": "2025-10-30",
+                            "last_maintenance": "2025-06-15"
+                        }
+                    ]
+                },
+                {
+                    "id": "T002",
+                    "name": "Trainset T002",
+                    "components": [
+                        {
+                            "name": "Bogie",
+                            "total_km": 134567,
+                            "wear_percentage": 38.9,
+                            "health_status": "Good",
+                            "health_color": "green",
+                            "maintenance_due": "2026-03-20",
+                            "last_maintenance": "2025-09-01"
+                        },
+                        {
+                            "name": "HVAC",
+                            "total_km": 167890,
+                            "wear_percentage": 71.3,
+                            "health_status": "Warning",
+                            "health_color": "yellow",
+                            "maintenance_due": "2025-11-25",
+                            "last_maintenance": "2025-07-05"
+                        },
+                        {
+                            "name": "Brakes",
+                            "total_km": 145623,
+                            "wear_percentage": 52.7,
+                            "health_status": "Good",
+                            "health_color": "green",
+                            "maintenance_due": "2026-01-18",
+                            "last_maintenance": "2025-08-22"
+                        }
+                    ]
+                },
+                {
+                    "id": "T003",
+                    "name": "Trainset T003",
+                    "components": [
+                        {
+                            "name": "Bogie",
+                            "total_km": 189234,
+                            "wear_percentage": 76.5,
+                            "health_status": "Critical",
+                            "health_color": "red",
+                            "maintenance_due": "2025-11-10",
+                            "last_maintenance": "2025-06-28"
+                        },
+                        {
+                            "name": "HVAC",
+                            "total_km": 123456,
+                            "wear_percentage": 29.4,
+                            "health_status": "Good",
+                            "health_color": "green",
+                            "maintenance_due": "2026-04-15",
+                            "last_maintenance": "2025-09-12"
+                        },
+                        {
+                            "name": "Brakes",
+                            "total_km": 176543,
+                            "wear_percentage": 65.8,
+                            "health_status": "Warning",
+                            "health_color": "yellow",
+                            "maintenance_due": "2025-12-08",
+                            "last_maintenance": "2025-07-14"
+                        }
+                    ]
+                }
+            ],
+            "historical_data": generateHistoricalData()
+        };
+
+        function generateHistoricalData() {
+            const data = [];
+            const components = ['Bogie', 'HVAC', 'Brakes'];
+            const trainsets = ['T001', 'T002', 'T003'];
+            
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const monthStr = date.toISOString().substr(0, 7);
+                
+                trainsets.forEach(trainset => {
+                    components.forEach(component => {
+                        data.push({
+                            date: monthStr,
+                            trainset: trainset,
+                            component: component,
+                            km_usage: Math.floor(Math.random() * 5000) + 3000,
+                            wear_increase: Math.random() * 6 + 2
+                        });
+                    });
+                });
+            }
+            return data;
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                loadDashboard();
+                hideLoadingScreen();
+            }, 1500);
+        });
+
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').style.display = 'none';
+        }
+
+        function loadDashboard() {
+            dashboardData = sampleData;
+            populateTrainsetFilter();
+            updateSummaryCards();
+            renderChart();
+            renderTable();
+            setupEventListeners();
+        }
+
+        function populateTrainsetFilter() {
+            const select = document.getElementById('trainsetFilter');
+            dashboardData.trainsets.forEach(trainset => {
+                const option = document.createElement('option');
+                option.value = trainset.id;
+                option.textContent = trainset.name;
+                select.appendChild(option);
+            });
+        }
+
+        function updateSummaryCards() {
+            const allComponents = [];
+            dashboardData.trainsets.forEach(trainset => {
+                trainset.components.forEach(component => {
+                    allComponents.push({
+                        ...component,
+                        trainset: trainset.id
+                    });
+                });
+            });
+
+            // Average mileage
+            const avgMileage = allComponents.reduce((sum, comp) => sum + comp.total_km, 0) / allComponents.length;
+            document.getElementById('avgMileage').textContent = Math.round(avgMileage).toLocaleString() + ' km';
+
+            // Most worn component
+            const mostWorn = allComponents.reduce((max, comp) => 
+                comp.wear_percentage > max.wear_percentage ? comp : max
+            );
+            document.getElementById('mostWornComponent').textContent = `${mostWorn.trainset} - ${mostWorn.name}`;
+            document.getElementById('mostWornPercentage').textContent = `${mostWorn.wear_percentage}% wear`;
+
+            // Next maintenance
+            const nextMaint = allComponents.reduce((earliest, comp) => 
+                new Date(comp.maintenance_due) < new Date(earliest.maintenance_due) ? comp : earliest
+            );
+            document.getElementById('nextMaintenance').textContent = `${nextMaint.trainset} - ${nextMaint.name}`;
+            document.getElementById('nextMaintenanceDate').textContent = new Date(nextMaint.maintenance_due).toLocaleDateString();
+
+            // Health overview
+            const healthCounts = allComponents.reduce((counts, comp) => {
+                counts[comp.health_status.toLowerCase()]++;
+                return counts;
+            }, { good: 0, warning: 0, critical: 0 });
+
+            document.getElementById('goodCount').textContent = healthCounts.good;
+            document.getElementById('warningCount').textContent = healthCounts.warning;
+            document.getElementById('criticalCount').textContent = healthCounts.critical;
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            const filteredData = getFilteredChartData();
+            
+            const chartConfig = {
+                type: currentFilters.chartType,
+                data: filteredData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Component Wear Trends Over Time'
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}${context.dataset.yAxisID === 'y1' ? '%' : ' km'}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time Period'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Kilometre Usage'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Wear Percentage (%)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            };
+
+            currentChart = new Chart(ctx, chartConfig);
+        }
+
+        function getFilteredChartData() {
+            const filtered = dashboardData.historical_data.filter(item => {
+                return (currentFilters.trainset === 'all' || item.trainset === currentFilters.trainset) &&
+                       (currentFilters.component === 'all' || item.component === currentFilters.component);
+            });
+
+            const groupedData = grouped = {};
+            filtered.forEach(item => {
+                const key = `${item.trainset}-${item.component}`;
+                if (!groupedData[key]) {
+                    groupedData[key] = [];
+                }
+                groupedData[key].push(item);
+            });
+
+            const datasets = [];
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#f97316'];
+            let colorIndex = 0;
+
+            Object.keys(groupedData).forEach(key => {
+                const [trainset, component] = key.split('-');
+                const data = groupedData[key].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // KM Usage dataset
+                datasets.push({
+                    label: `${trainset} ${component} (KM)`,
+                    data: data.map(item => item.km_usage),
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length] + '20',
+                    yAxisID: 'y',
+                    type: currentFilters.chartType
+                });
+
+                // Wear percentage dataset
+                datasets.push({
+                    label: `${trainset} ${component} (Wear%)`,
+                    data: data.map(item => item.wear_increase),
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length] + '40',
+                    yAxisID: 'y1',
+                    type: 'line',
+                    borderDash: [5, 5]
+                });
+
+                colorIndex++;
+            });
+
+            const labels = [...new Set(filtered.map(item => item.date))].sort();
+
+            return {
+                labels: labels,
+                datasets: datasets
+            };
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            dashboardData.trainsets.forEach(trainset => {
+                trainset.components.forEach(component => {
+                    if ((currentFilters.trainset === 'all' || trainset.id === currentFilters.trainset) &&
+                        (currentFilters.component === 'all' || component.name === currentFilters.component)) {
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${trainset.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${component.name}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${component.total_km.toLocaleString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <div class="flex items-center">
+                                    <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                                        <div class="bg-${component.health_color === 'green' ? 'green' : component.health_color === 'yellow' ? 'yellow' : 'red'}-600 h-2 rounded-full" style="width: ${component.wear_percentage}%"></div>
+                                    </div>
+                                    ${component.wear_percentage}%
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    component.health_status === 'Good' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                    component.health_status === 'Warning' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                }">
+                                    ${component.health_status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${new Date(component.maintenance_due).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3" onclick="scheduleMaintenanceComponent('${trainset.id}', '${component.name}')">
+                                    <i class="fas fa-calendar-plus mr-1"></i>Schedule
+                                </button>
+                                <button class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300" onclick="viewComponentDetails('${trainset.id}', '${component.name}')">
+                                    <i class="fas fa-eye mr-1"></i>View
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            // Dark mode toggle
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+            // Filter buttons
+            document.querySelectorAll('.filter-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const group = this.parentElement;
+                    group.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.period) {
+                        currentFilters.period = this.dataset.period;
+                    } else if (this.dataset.chart) {
+                        currentFilters.chartType = this.dataset.chart;
+                    }
+                    
+                    renderChart();
+                });
+            });
+
+            // Dropdown filters
+            document.getElementById('trainsetFilter').addEventListener('change', function() {
+                currentFilters.trainset = this.value;
+                renderChart();
+                renderTable();
+            });
+
+            document.getElementById('componentFilter').addEventListener('change', function() {
+                currentFilters.component = this.value;
+                renderChart();
+                renderTable();
+            });
+
+            // Export functionality
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                document.getElementById('exportModal').classList.remove('hidden');
+                document.getElementById('exportModal').classList.add('flex');
+            });
+
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('exportModal').classList.add('hidden');
+                document.getElementById('exportModal').classList.remove('flex');
+            });
+
+            document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+
+            // Refresh chart
+            document.getElementById('refreshChart').addEventListener('click', function() {
+                renderChart();
+                updateSummaryCards();
+                renderTable();
+            });
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text('RailOptima Mileage Report', 20, 20);
+            
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+            
+            // Add summary information
+            let yPos = 50;
+            doc.text('Summary:', 20, yPos);
+            yPos += 10;
+            
+            const allComponents = [];
+            dashboardData.trainsets.forEach(trainset => {
+                trainset.components.forEach(component => {
+                    allComponents.push({
+                        trainset: trainset.name,
+                        component: component.name,
+                        totalKm: component.total_km,
+                        wearPercent: component.wear_percentage,
+                        status: component.health_status,
+                        maintenance: component.maintenance_due
+                    });
+                });
+            });
+            
+            allComponents.forEach(comp => {
+                doc.text(`${comp.trainset} - ${comp.component}: ${comp.wearPercent}% wear, ${comp.totalKm.toLocaleString()} km`, 25, yPos);
+                yPos += 8;
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+            });
+            
+            doc.save('railoptima-mileage-report.pdf');
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function exportToCSV() {
+            const headers = ['Trainset', 'Component', 'Total KM', 'Wear Percentage', 'Health Status', 'Next Maintenance', 'Last Maintenance'];
+            const csvData = [headers];
+            
+            dashboardData.trainsets.forEach(trainset => {
+                trainset.components.forEach(component => {
+                    csvData.push([
+                        trainset.name,
+                        component.name,
+                        component.total_km,
+                        component.wear_percentage + '%',
+                        component.health_status,
+                        component.maintenance_due,
+                        component.last_maintenance
+                    ]);
+                });
+            });
+            
+            const csvContent = csvData.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'railoptima-mileage-data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function scheduleMaintenanceComponent(trainsetId, componentName) {
+            alert(`Scheduling maintenance for ${trainsetId} - ${componentName}\n\nThis would integrate with your maintenance management system.`);
+        }
+
+        function viewComponentDetails(trainsetId, componentName) {
+            alert(`Viewing detailed analytics for ${trainsetId} - ${componentName}\n\nThis would open a detailed component view with historical data, maintenance logs, and predictive insights.`);
+        }
+
+        // Initialize dark mode from localStorage
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "name": "railoptima-platform",
+  "version": "1.0.0",
+  "description": "RailOptima – AI-Driven Fleet Optimization Web & Dashboard for Kochi Metro",
+  "main": "server.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./css/input.css -o ./css/output.css --minify",
+    "build": "npm run build:css",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "railway",
+    "fleet-management",
+    "dashboard",
+    "webapp",
+    "cleaning-schedule",
+    "mileage-tracking",
+    "maintenance",
+    "kochi-metro",
+    "sih2025"
+  ],
+  "author": "RailOptima Team",
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "tailwindcss": "^3.4.17"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

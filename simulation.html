@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RailOptima Simulation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include other libs like Chart.js, Leaflet, etc. for richer simulation -->
+</head>
+<body class="bg-gradient-to-r from-metro-green to-metro-blue min-h-screen text-gray-900 font-sans">
+
+  <header class="p-6 flex justify-between items-center bg-white/30 backdrop-blur-md fixed w-full z-50">
+    <h1 class="text-3xl font-bold text-metro-green">RailOptima Simulation</h1>
+    <nav>
+      <a href="#features" class="text-metro-green hover:underline mr-6">Features</a>
+      <a href="#demo" class="text-metro-green hover:underline">Simulation</a>
+    </nav>
+  </header>
+
+  <main class="pt-24 max-w-7xl mx-auto px-6">
+
+    <section id="features" class="mb-16">
+      <h2 class="text-4xl font-bold text-center mb-12 text-white">Core Features</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+
+        <!-- Fitness Certificate Tracking -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('fitness-certificates')">
+          <header class="flex items-center mb-4">
+            <img src="images/certificates.png" alt="Certificates" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Fitness Certificate Tracking</h3>
+          </header>
+          <p>Real-time monitoring of certifications per trainset with expiry alerts and detailed reports.</p>
+        </article>
+
+        <!-- Job Card Integration -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('job-card-status')">
+          <header class="flex items-center mb-4">
+            <img src="images/jobcard.png" alt="Job Cards" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Job Card Integration</h3>
+          </header>
+          <p>Integrated maintenance job card status with priorities, progress tracking, and automated alerts.</p>
+        </article>
+
+        <!-- Branding Exposure -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('branding-exposure')">
+          <header class="flex items-center mb-4">
+            <img src="images/branding.png" alt="Branding" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Branding Exposure Dashboard</h3>
+          </header>
+          <p>Visualize train wrap ad coverage stats with alerts for SLA compliance and revenue impact.</p>
+        </article>
+
+        <!-- Mileage Balancing -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('mileage-balancing')">
+          <header class="flex items-center mb-4">
+            <img src="images/mileage.png" alt="Mileage" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Mileage Balancing</h3>
+          </header>
+          <p>Dynamic balancing of mileage across trainsets with predictive wear and asset life optimization.</p>
+        </article>
+
+        <!-- Cleaning Slots Scheduling -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('cleaning-slots')">
+          <header class="flex items-center mb-4">
+            <img src="images/cleaning.png" alt="Cleaning" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Cleaning & Detailing Slots</h3>
+          </header>
+          <p>Interactive scheduling of cleaning bays with staff assignment and real-time availability.</p>
+        </article>
+
+        <!-- Stabling Visualization -->
+        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('stabling-visualization')">
+          <header class="flex items-center mb-4">
+            <img src="images/stabling.png" alt="Stabling" class="w-12 h-12 mr-4" />
+            <h3 class="text-xl font-semibold">Stabling Geometry Visualization</h3>
+          </header>
+          <p>3D yard map featuring smart train positioning for minimized shunting operations.</p>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="demo" class="mb-24">
+      <h2 class="text-3xl font-bold text-center text-white mb-8">Simulation Demo</h2>
+      <div class="aspect-w-16 aspect-h-9 max-w-4xl mx-auto rounded-xl shadow-lg overflow-hidden">
+        <iframe src="demo.html" frameborder="0" class="w-full h-full"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function openFeature(feature) {
+      alert("Demo page for feature: " + feature + "\n(Integrate feature-specific UI here)");
+      // TODO: Implement feature-specific modal or page section display here
+    }
+  </script>
+</body>
+</html>
