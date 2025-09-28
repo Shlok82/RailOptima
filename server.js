@@ -10,13 +10,21 @@ const PORT = process.env.PORT || 3000;
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? [
-        'https://your-domain.onrender.com',
-        'https://railoptima-platform.onrender.com'
+       'https://rail-optima-ksjk.vercel.app'
       ]
     : true,
   credentials: true,
   optionsSuccessStatus: 200
 };
+
+// Serve static assets from public/
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Parse JSON bodies
+app.use(express.json());
+
+// Enable CORS
+app.use(cors(corsOptions));
 
 // Production-specific middleware
 if (process.env.NODE_ENV === 'production') {
@@ -26,10 +34,6 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-// Middleware
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.static('.'));
 
 // Serve main HTML files
 app.get('/', (req, res) => {
