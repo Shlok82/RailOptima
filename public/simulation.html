@@ -1,98 +1,206 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RailOptima Simulation</title>
+  <title>RailOptima – AI-Driven Fleet Optimization for Kochi Metro</title>
+
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Include other libs like Chart.js, Leaflet, etc. for richer simulation -->
+
+  <style>
+    /* Gradient animated background covering full screen */
+    #gradient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(115deg, #00a300 0%, #2d89ef 46%, #e3a21a 83%, #da532c 100%);
+      background-size: 300% 300%;
+      animation: gradientMove 12s ease-in-out infinite alternate;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    /* Container background and style for ranking section */
+    #trainset-ranking {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 2rem;
+      max-width: 1480px;
+      margin: 3rem auto 4rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+
+    /* Ranking cards styling */
+    .rank-card {
+      position: relative;
+      border-radius: 1.5rem;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(45, 137, 239, 0.09);
+      transition: box-shadow 0.3s, transform 0.3s;
+      overflow: hidden;
+      padding: 2rem;
+    }
+    .rank-card:hover {
+      box-shadow: 0 10px 24px 0 rgba(45, 137, 239, 0.17), 0 2px 8px 0 rgba(0, 163, 0, 0.07);
+      transform: scale(1.03) translateY(-4px);
+    }
+    .rank-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      border-radius: 1.5rem 0 0 1.5rem;
+      transition: background 0.3s;
+      z-index: 10;
+    }
+    .rank-card[data-rank='1']::before { background: linear-gradient(180deg, #00a300, #2d89ef); }
+    .rank-card[data-rank='2']::before { background: linear-gradient(180deg, #2d89ef, #e3a21a); }
+    .rank-card[data-rank='3']::before { background: linear-gradient(180deg, #e3a21a, #da532c); }
+    .rank-card[data-rank='other']::before { background: linear-gradient(180deg, #f0f5fc, #e5e7eb); }
+
+    .rank-badge {
+      font-weight: 600;
+      padding: 0.45rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 1rem;
+      display: inline-block;
+      z-index: 20;
+    }
+    .badge-green { background: #00a300; color: #fff; }
+    .badge-blue { background: #2d89ef; color: #fff; }
+    .badge-orange { background: #e3a21a; color: #fff; }
+    .bg-gray-300 { background: #d1d5db; color: #222; }
+
+    .list-feat span {
+      font-weight: 600;
+    }
+    .score-inline {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 9999px;
+      padding: 0.35rem 1rem;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    /* Responsive grid */
+    #ranking-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      #ranking-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1024px) {
+      #ranking-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Custom gradient header text */
+    #trainset-ranking h2 {
+      background: linear-gradient(90deg, #00a300, #2d89ef, #e3a21a, #da532c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 2.5rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-r from-metro-green to-metro-blue min-h-screen text-gray-900 font-sans">
+<body class="antialiased relative">
 
-  <header class="p-6 flex justify-between items-center bg-white/30 backdrop-blur-md fixed w-full z-50">
-    <h1 class="text-3xl font-bold text-metro-green">RailOptima Simulation</h1>
-    <nav>
-      <a href="#features" class="text-metro-green hover:underline mr-6">Features</a>
-      <a href="#demo" class="text-metro-green hover:underline">Simulation</a>
-    </nav>
-  </header>
+  <!-- Animated gradient background -->
+  <div id="gradient-bg"></div>
 
-  <main class="pt-24 max-w-7xl mx-auto px-6">
-
-    <section id="features" class="mb-16">
-      <h2 class="text-4xl font-bold text-center mb-12 text-white">Core Features</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-
-        <!-- Fitness Certificate Tracking -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('fitness-certificates')">
-          <header class="flex items-center mb-4">
-            <img src="images/certificates.png" alt="Certificates" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Fitness Certificate Tracking</h3>
-          </header>
-          <p>Real-time monitoring of certifications per trainset with expiry alerts and detailed reports.</p>
-        </article>
-
-        <!-- Job Card Integration -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('job-card-status')">
-          <header class="flex items-center mb-4">
-            <img src="images/jobcard.png" alt="Job Cards" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Job Card Integration</h3>
-          </header>
-          <p>Integrated maintenance job card status with priorities, progress tracking, and automated alerts.</p>
-        </article>
-
-        <!-- Branding Exposure -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('branding-exposure')">
-          <header class="flex items-center mb-4">
-            <img src="images/branding.png" alt="Branding" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Branding Exposure Dashboard</h3>
-          </header>
-          <p>Visualize train wrap ad coverage stats with alerts for SLA compliance and revenue impact.</p>
-        </article>
-
-        <!-- Mileage Balancing -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('mileage-balancing')">
-          <header class="flex items-center mb-4">
-            <img src="images/mileage.png" alt="Mileage" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Mileage Balancing</h3>
-          </header>
-          <p>Dynamic balancing of mileage across trainsets with predictive wear and asset life optimization.</p>
-        </article>
-
-        <!-- Cleaning Slots Scheduling -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('cleaning-slots')">
-          <header class="flex items-center mb-4">
-            <img src="images/cleaning.png" alt="Cleaning" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Cleaning & Detailing Slots</h3>
-          </header>
-          <p>Interactive scheduling of cleaning bays with staff assignment and real-time availability.</p>
-        </article>
-
-        <!-- Stabling Visualization -->
-        <article class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onclick="openFeature('stabling-visualization')">
-          <header class="flex items-center mb-4">
-            <img src="images/stabling.png" alt="Stabling" class="w-12 h-12 mr-4" />
-            <h3 class="text-xl font-semibold">Stabling Geometry Visualization</h3>
-          </header>
-          <p>3D yard map featuring smart train positioning for minimized shunting operations.</p>
-        </article>
-
-      </div>
-    </section>
-
-    <section id="demo" class="mb-24">
-      <h2 class="text-3xl font-bold text-center text-white mb-8">Simulation Demo</h2>
-      <div class="aspect-w-16 aspect-h-9 max-w-4xl mx-auto rounded-xl shadow-lg overflow-hidden">
-        <iframe src="demo.html" frameborder="0" class="w-full h-full"></iframe>
-      </div>
-    </section>
-  </main>
+  <!-- RailOptima trainset ranking dashboard section -->
+  <section id="trainset-ranking" class="mx-6">
+    <h2>Trainset Rankings by Feature Health</h2>
+    <div id="ranking-list" class="mb-8"></div>
+  </section>
 
   <script>
-    function openFeature(feature) {
-      alert("Demo page for feature: " + feature + "\n(Integrate feature-specific UI here)");
-      // TODO: Implement feature-specific modal or page section display here
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // Generate 15 demo trainsets
+      const trainsets = Array.from({length: 15}).map((_, i) => ({
+        id: `Trainset #${101 + i}`,
+        fitness: Math.floor(65 + Math.random() * 35),
+        jobCard: `Open: ${Math.floor(Math.random() * 8)}, Closed: ${Math.floor(6 + Math.random() * 10)}`,
+        branding: `${Math.floor(75 + Math.random() * 25)}% exposure`,
+        mileage: ["Balanced", "Slightly Over", "Unbalanced"][Math.floor(Math.random() * 3)],
+        cleaning: ["Scheduled", "Delayed", "Overdue"][Math.floor(Math.random() * 3)]
+      }));
+
+      // Calculate ranking score using weighted features
+      function rankScore(trainset) {
+        const fitnessScore = trainset.fitness;
+        const jobCardScore = 100 - parseInt(trainset.jobCard.match(/Open: (\d+)/)[1]) * 7;
+        const brandingScore = parseInt(trainset.branding.match(/\d+/)[0]);
+        const mileageScore =
+          trainset.mileage === "Balanced" ? 100 :
+          trainset.mileage === "Slightly Over" ? 75 : 50;
+        const cleaningScore =
+          trainset.cleaning === "Scheduled" ? 100 :
+          trainset.cleaning === "Delayed" ? 60 : 30;
+
+        return (
+          fitnessScore * 0.25 +
+          jobCardScore * 0.2 +
+          brandingScore * 0.15 +
+          mileageScore * 0.2 +
+          cleaningScore * 0.2
+        );
+      }
+
+      // Sort trainsets descending by score
+      const ranked = [...trainsets].sort((a, b) => rankScore(b) - rankScore(a));
+
+      // Render ranking cards into container
+      const rankingList = document.getElementById("ranking-list");
+      rankingList.innerHTML = ranked.map((trainset, idx) => {
+        const badgeClass =
+          idx === 0 ? "badge-green" :
+          idx === 1 ? "badge-blue" :
+          idx === 2 ? "badge-orange" :
+          "bg-gray-300";
+
+        const rankType =
+          idx === 0 ? "1" :
+          idx === 1 ? "2" :
+          idx === 2 ? "3" : 
+          "other";
+
+        return `
+          <div class="rank-card" data-rank="${rankType}">
+            <div class="flex justify-between items-center mb-6">
+              <span class="text-xl font-bold text-gray-900">${trainset.id}</span>
+              <span class="rank-badge ${badgeClass}">Rank #${idx + 1}</span>
+            </div>
+            <ul class="space-y-2 text-lg">
+              <li><span style="color:#00a300">Fitness Certificate:</span> ${trainset.fitness}%</li>
+              <li><span style="color:#2d89ef">Job-Card:</span> ${trainset.jobCard}</li>
+              <li><span style="color:#e3a21a">Branding:</span> ${trainset.branding}</li>
+              <li><span style="color:#da532c">Mileage:</span> ${trainset.mileage}</li>
+              <li><span style="color:#2d89ef">Cleaning Slot:</span> ${trainset.cleaning}</li>
+            </ul>
+            <div class="mt-6 flex justify-end">
+              <span class="score-inline">Score: ${Math.round(rankScore(trainset))}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    });
   </script>
 </body>
 </html>
